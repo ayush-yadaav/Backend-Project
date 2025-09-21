@@ -30,7 +30,7 @@ if(
 
 // check user exist or not 
 
-const existedUser = User.findOne({
+const existedUser = await User.findOne({
 // in the use of or we can check many field 
     $or: [{username}, {email}]
 })
@@ -42,7 +42,16 @@ if(existedUser){
 // check image and avatar 
 
 const avatarLocalPath = req.files?.avatar[0]?.path
-const coverImageLocalPath = req.files?.coverImage[0]?.path
+
+// const coverImageLocalPath = req.files?.coverImage[0]?.path
+
+let coverImageLocalPath;
+if( req.files && Array.isArray(req.files) && req.files.coverImage.length > 0){
+    coverImageLocalPath = req.files.coverImage[0].path
+}
+
+
+
 if(!avatarLocalPath){
     throw new ApiError(400, "Avatar file is required")
 }
@@ -51,13 +60,13 @@ if(!avatarLocalPath){
  const avatar = await uploadOncloudinary(avatarLocalPath)
  const coverImage = await uploadOncloudinary(coverImageLocalPath)
 
- if(!avatar){
-    throw new ApiError(400, "Avatar files is required")
- }
+if (!avatar) {
+   throw new ApiError(400, "Failed to upload avatar to Cloudinary");
+}
 
  const user = await User.create({
     fullname,
-    avatar:avatar.url,
+    avatar: avatar.url,
     coverImage: coverImage?.url || "",
     email,
     password,
